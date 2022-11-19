@@ -1,6 +1,6 @@
-use std::path::Path;
-
 use clap::Parser;
+
+use crate::lib;
 
 #[derive(Debug, Clone, Parser)]
 pub struct CodeArgs {
@@ -27,51 +27,82 @@ pub fn exec(args: &CodeArgs) {
 #[derive(Debug, Clone, Parser)]
 pub struct CodeNewArgs {
     /// The name of the project
-    pub name: String,
+    pub name: Option<String>,
 
-    #[clap(short, long)]
-    pub lang: Option<String>,
+    #[clap(short, long, default_value = "rust")]
+    pub lang: String,
 
     #[clap(short, long)]
     pub template: Option<String>,
+    
+    #[clap(short, long, default_value="false")]
+    pub random: bool,
+
+    #[clap(short, long, default_value="false")]
+    pub with_vscode: bool,
 }
 
 fn new(args: &CodeNewArgs) {
-    use clipboard::ClipboardContext;
-    use clipboard::ClipboardProvider;
-
-    let mut cl_ctx: ClipboardContext =
-        ClipboardProvider::new().expect("Failed to get clipboard context");
+    
 
     // destructure the args
     let CodeNewArgs {
-        name,
-        lang,
-        template,
+        name: _,
+        lang: _,
+        template: _,
+        random,
+        with_vscode
     } = args;
-    // do something with the args
-    let _path = Path::new("C:\\test");
-    cl_ctx
-        .set_contents(_path.to_str().unwrap().to_string())
-        .expect("Failed to set clipboard");
-    ferrisprint!(
-        "Created a new project\nwith the name {}.\nCopied path to clipboard",
-        name
-    );
-}
 
-fn list() {
-    unimplemented!("list");
-}
+    let cnf = lib::config::load_config();
 
-fn remove() {
-    unimplemented!("remove");
-}
+    if *random {
+        println!("Generating random rust project ...");
 
-fn export() {
-    unimplemented!("export");
-}
+        // generate random 6 character string
+        let random_string = lib::util::random_string(6);
 
-fn config() -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
+        // create new rust project with random name in code directory
+        let mut code_dir = cnf.code_dir;
+        
+        // add rust/random string to code directory and append random string
+        code_dir.push("rust");
+        code_dir.push("random");
+        code_dir.push(&random_string);
+
+        // run cargo command
+        let cargo_command = format!("cargo new {}", code_dir.to_str().unwrap());
+        std::process::Command::new("cmd")
+            .args(&["/C", &cargo_command])
+            .output()
+            .expect("Failed to execute command");
+        
+        // inform user that project was created
+        // TODO: maybe add a better message to clarify what was created and where
+        println!("Done!");
+
+        // Convert code_dir to string
+        let code_dir_str = match code_dir.to_str() {
+            Some(s) => s.to_string(),
+            _ => String::from(""),
+        };
+        // and copy it to clipboard so the user access the directory easily
+        lib::util::copy_to_clipboard(code_dir_str);
+
+        // open vscode if requested makes cd-ing unnecessary
+        if *with_vscode {
+            let mut vscode_command = String::from("code ");
+            vscode_command.push_str(code_dir.to_str().unwrap());
+            std::process::Command::new("cmd")
+                .args(&["/C", &vscode_command])
+                .output()
+                .expect("Failed to execute command");
+        }
+
+        return;
+    }
+    
+      
+
+
 }

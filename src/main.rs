@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate ferris_print;
 extern crate base64;
 
 pub mod args;
@@ -32,5 +30,6 @@ fn main() {
     match command_type {
         CommandType::Code(code_args) => commands::code::exec(&code_args),
         CommandType::Util(util_args) => commands::util::exec(&util_args),
+        CommandType::Config(config_args) => commands::config::exec(&config_args),
     }
 }

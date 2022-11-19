@@ -16,6 +16,7 @@ pub struct UtilArgs {
 pub enum UtilSubCommand {
     /// Encode or decode base64 in different text formats
     Base64(UtilBase64Args),
+    /// Manipulate strings
     String(UtilStringArgs),
 }
 
