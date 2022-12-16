@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
+use std::fmt::{Display, Formatter};
 use std::fs;
+use strum_macros::EnumString;
 
 extern crate serde_yaml;
 use super::consts;
@@ -8,10 +10,128 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::path::PathBuf;
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+/// This struct is used to represent the config file. It is used to define the default directories
+/// and the default editor. The editor path is only used if the editor is set to "Other" and then
+/// the user can define the path to the editor.
+/// 
+/// !IMPORTANT! If you define a new field you also have to add it to the iterator implementation \
+/// !IMPORTANT! and it also has to have a default value in the new function aaand it has to \
+/// !IMPORTANT! implement the Display trait and the FromStr trait if it is not a string.
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub code_dir: Box<PathBuf>,
     pub template_dir: Box<PathBuf>,
+    pub editor: Editor,
+    pub editor_path: Option<String>,
+}
+
+/// This iterator struct is only used to implement the iterator trait for the config struct because
+/// we need an index to tell where we are in the iterator. Pretty obvious.
+#[derive(Clone)]
+pub struct ConfigIterator {
+    index: usize,
+    config: Config,
+}
+
+impl Config {
+    pub fn new() -> Config {
+        Config {
+            code_dir: Box::new(PathBuf::from(consts::CODE_DIR_NAME)),
+            template_dir: Box::new(PathBuf::from(consts::TEMPLATE_DIR_NAME)),
+            editor: Editor::None,
+            editor_path: None,
+        }
+    }
+    pub fn iter(&self) -> ConfigIterator {
+        ConfigIterator {
+            index: 0,
+            config: self.clone(),
+        }
+    }
+}
+
+/// The iterator implementation for the config struct is used to print out all keys and values so
+/// the user can see what he or she is able to define. Better than git which just tells you to read
+/// the documentation online.
+impl Iterator for ConfigIterator {
+    type Item = (&'static str, String);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.index {
+            0 => {
+                self.index += 1;
+                Some((
+                    "code_dir",
+                    self.config
+                        .code_dir
+                        .to_str()
+                        .expect("Failed to convert the code dir to string")
+                        .to_string(),
+                ))
+            }
+            1 => {
+                self.index += 1;
+                Some((
+                    "template_dir",
+                    self.config
+                        .template_dir
+                        .to_str()
+                        .expect("Failed to convert the template dir to string")
+                        .to_string(),
+                ))
+            }
+            2 => {
+                self.index += 1;
+                Some(("editor", self.config.editor.to_string()))
+            }
+            3 => {
+                self.index += 1;
+                match &self.config.editor_path {
+                    Some(path) => Some(("editor_path", path.to_string())),
+                    None => ("editor_path", String::from("none")).into(),
+                }
+            }
+            _ => None,
+        }
+    }
+}
+
+/// This enum is used to represent the different editors that can be defined by default.
+/// But if anyone uses a different editor there is also a "Other" option whereas the user can define the path to the editor
+/// which will then be used to open the files.
+#[derive(PartialEq, Eq, Debug, EnumString, Serialize, Deserialize, Copy, Clone)]
+#[strum(serialize_all = "lowercase")]
+pub enum Editor {
+    Atom,
+    Emacs,
+    Gedit,
+    Nano,
+    NotePad,
+    Sublime,
+    Vim,
+    VSCode,
+
+    Other,
+    None,
+}
+
+/// This is a custom implementation of the Display trait for the Editor enum. \
+/// This is needed to be able to print the enum to the console and convert it to a string.
+impl Display for Editor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Editor::Atom => write!(f, "atom"),
+            Editor::Emacs => write!(f, "emacs"),
+            Editor::Gedit => write!(f, "gedit"),
+            Editor::Nano => write!(f, "nano"),
+            Editor::NotePad => write!(f, "notepad"),
+            Editor::Sublime => write!(f, "sublime"),
+            Editor::Vim => write!(f, "vim"),
+            Editor::VSCode => write!(f, "vscode"),
+            Editor::Other => write!(f, "other"),
+            Editor::None => write!(f, "none"),
+        }
+    }
 }
 
 /// Loads the config file if it exists, otherwise returns the default config
@@ -46,10 +166,16 @@ pub fn std_config() -> Config {
     let mut template_dir = Box::new(current_home_dir);
     template_dir.push(consts::TEMPLATE_DIR_NAME);
 
+    let editor = Editor::None;
+
+    let editor_path = None;
+
     // create config struct
     Config {
         code_dir,
         template_dir,
+        editor,
+        editor_path,
     }
 }
 

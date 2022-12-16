@@ -48,3 +48,17 @@ pub fn open_file_in_editor(file: &PathBuf) {
     command.arg(file);
     command.spawn().expect("Failed to spawn editor");
 }
+
+pub fn get_longest_string(strings: Vec<&str>) -> usize {
+    let mut longest = 0;
+    for string in strings {
+        if string.len() > longest {
+            longest = string.len();
+        }
+    }
+    longest
+}
+
+pub fn calc_padding(longest: usize, string: &str) -> usize {
+    longest - string.len()
+}
