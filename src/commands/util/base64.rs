@@ -50,7 +50,7 @@ fn encode(args: &EncodingArgs) {
     } = args;
 
     // encode the string to base64 with the format
-    let encoded_string = base64::encode_config(string, character_set.as_base64_config());
+    let encoded_string = base64::encode_engine(string.as_bytes(), &character_set.create_engine());
     println!("{}", encoded_string);
 }
 
@@ -61,7 +61,7 @@ fn decode(args: &DecodingArgs) {
     } = args;
 
     // decode the string from base64 with the format
-    let decoded = base64::decode_config(string, character_set.as_base64_config())
+    let decoded = base64::decode_engine(string.as_bytes(), &character_set.create_engine())
         .expect("Failed to decode the string");
     let decoded_string =
         String::from_utf8(decoded).expect("Failed to convert the bytes to a string");
