@@ -1,5 +1,6 @@
 use std::io::Write;
 use std::ops::Range;
+use std::path::PathBuf;
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
@@ -30,4 +31,20 @@ pub fn ask_yes_no(question: &str) -> bool {
         .read_line(&mut answer)
         .expect("Failed to read line");
     answer.trim().to_lowercase() == "y"
+}
+
+pub fn get_notepad_or_gedit() -> String {
+    let mut notepad = String::new();
+    if cfg!(target_os = "windows") {
+        notepad = "notepad".to_string();
+    } else if cfg!(target_os = "linux") {
+        notepad = "gedit".to_string();
+    }
+    notepad
+}
+pub fn open_file_in_editor(file: &PathBuf) {
+    let editor = get_notepad_or_gedit();
+    let mut command = std::process::Command::new(editor);
+    command.arg(file);
+    command.spawn().expect("Failed to spawn editor");
 }
