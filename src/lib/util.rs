@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::ops::Range;
 
 use clipboard::ClipboardContext;
@@ -19,4 +20,14 @@ pub fn random_string(rng: i32) -> String {
             random_char
         })
         .collect()
+}
+
+pub fn ask_yes_no(question: &str) -> bool {
+    let mut answer = String::new();
+    print!("{} ", question);
+    std::io::stdout().flush().expect("Failed to flush stdout");
+    std::io::stdin()
+        .read_line(&mut answer)
+        .expect("Failed to read line");
+    answer.trim().to_lowercase() == "y"
 }

@@ -1,4 +1,4 @@
-#[allow(non_snake_case)]
+#![allow(non_snake_case)]
 use std::fs;
 
 extern crate serde_yaml;
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::path::PathBuf;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub code_dir: Box<PathBuf>,
     pub template_dir: Box<PathBuf>,
@@ -43,7 +43,7 @@ pub fn std_config() -> Config {
     code_dir.push(consts::CODE_DIR_NAME);
 
     // create path to template directory
-    let mut template_dir = Box::new(current_home_dir.to_owned());
+    let mut template_dir = Box::new(current_home_dir);
     template_dir.push(consts::TEMPLATE_DIR_NAME);
 
     // create config struct

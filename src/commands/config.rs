@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use crate::lib::{self, config::save_config};
+use alina::{self, config::save_config};
 
 #[derive(Debug, Clone, Parser)]
 pub struct ConfigArgs {
@@ -34,14 +34,14 @@ pub struct SetArgs {
 
 fn set(args: &SetArgs) {
     let SetArgs { key_value } = args;
-    let mut cnf = lib::config::load_config();
+    let mut cnf = alina::config::load_config();
     let key_value_vec = key_value.split('=').collect::<Vec<&str>>();
     let key = key_value_vec[0];
     let value = key_value_vec[1];
 
     println!("Setting {} to {}", key, value);
 
-    use lib::config::ops::create_cnf_path;
+    use alina::config::ops::create_cnf_path;
 
     match key {
         "code_dir" => cnf.code_dir = create_cnf_path(value),
@@ -53,7 +53,7 @@ fn set(args: &SetArgs) {
 }
 
 fn reset () {
-    lib::config::reset_config().expect("Failed to reset config");
+    alina::config::reset_config().expect("Failed to reset config");
     println!("Config was reset to default");
 }
 

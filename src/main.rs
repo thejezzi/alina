@@ -2,7 +2,6 @@ extern crate base64;
 
 pub mod args;
 pub mod commands;
-pub mod lib;
 
 use args::Args;
 use clap::Parser;
@@ -31,5 +30,6 @@ fn main() {
         CommandType::Code(code_args) => commands::code::exec(&code_args),
         CommandType::Util(util_args) => commands::util::exec(&util_args),
         CommandType::Config(config_args) => commands::config::exec(&config_args),
+        CommandType::Note(note_args) => commands::note::exec(&note_args),
     }
 }
