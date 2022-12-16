@@ -18,3 +18,5 @@ ferris_print = "0.1.0"
 rand = "0.8.5"
 serde = { version = "1.0.147", features = ["derive"] }
 serde_yaml = "0.9.14"
+chrono = "0.4.19"
+colored = "2.0.0"

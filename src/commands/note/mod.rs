@@ -1,5 +1,7 @@
-use std::fs;
+use chrono::{DateTime, Utc};
 use clap::Parser;
+use colored::*;
+use std::fs;
 
 #[derive(Debug, Clone, Parser)]
 pub struct NoteArgs {
@@ -27,7 +29,7 @@ pub fn exec(args: &NoteArgs) {
     // match the subcommand
     match subcommand {
         Some(NoteSubCommand::New(new_args)) => new(new_args),
-        Some(NoteSubCommand::List) => log_unimplemented(),
+        Some(NoteSubCommand::List) => list(),
         Some(NoteSubCommand::Open) => log_unimplemented(),
         Some(NoteSubCommand::Delete) => log_unimplemented(),
         Some(NoteSubCommand::Edit) => log_unimplemented(),
@@ -59,6 +61,33 @@ fn new(args: &NoteNewArgs) {
         return;
     }
     fs::File::create(note_dir).expect("Failed to create note");
+}
+
+fn list() {
+    let cnf = alina::config::load_config();
+    let mut note_dir = *cnf.code_dir;
+    note_dir.push("notes");
+
+    let note_files = fs::read_dir(note_dir).expect("Failed to read notes directory");
+    for note_file in note_files {
+        let note_file = note_file.expect("Failed to read note file");
+        let note_file_name = note_file.file_name();
+        let updated_at = note_file
+            .metadata()
+            .expect("Failed to read note file metadata")
+            .modified()
+            .expect("Failed to read note file modified date");
+        let updated_at_datetime: DateTime<Utc> = updated_at.into();
+        let note_file_name = note_file_name
+            .to_str()
+            .expect("Failed to convert note file name to string");
+        println!(
+            "{} {}\t{}",
+            updated_at_datetime.format("%d.%m.%Y").to_string().black().on_bright_cyan(),
+            updated_at_datetime.format("%H:%M").to_string().black().on_bright_yellow(),
+            note_file_name
+        );
+    }
 }
 
 pub fn log_unimplemented() {
