@@ -2,6 +2,14 @@
 name = "alina"
 version = "0.1.0"
 edition = "2021"
+authors = ["Florian Hauptmann"]
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+panic = "abort"
+
 
 [lib]
 name = "alina"

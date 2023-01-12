@@ -45,12 +45,13 @@ fn set(args: &SetArgs) {
     let value = key_value_vec[1];
 
     use alina::config::ops::create_cnf_path;
+    use alina::config::editor::Editor;
 
     match key {
         "code_dir" => cnf.code_dir = create_cnf_path(value),
         "template_dir" => cnf.template_dir = create_cnf_path(value),
         "editor" => {
-            cnf.editor = alina::config::Editor::from_str(value).expect("Failed to parse editor")
+            cnf.editor = Editor::from_str(value).expect("Failed to parse editor")
         }
         "editor_path" => cnf.editor_path = Some(value.to_string()),
         _ => {

@@ -20,7 +20,7 @@ pub enum NoteSubCommand {
     /// Delete a note
     Delete,
     /// Edit a note
-    Edit,
+    Edit(NoteEditArgs),
 }
 
 pub fn exec(args: &NoteArgs) {
@@ -32,7 +32,7 @@ pub fn exec(args: &NoteArgs) {
         Some(NoteSubCommand::List) => list(),
         Some(NoteSubCommand::Open) => log_unimplemented(),
         Some(NoteSubCommand::Delete) => log_unimplemented(),
-        Some(NoteSubCommand::Edit) => log_unimplemented(),
+        Some(NoteSubCommand::Edit(args)) => edit(args),
         None => (),
     };
 }
@@ -41,11 +41,17 @@ pub fn exec(args: &NoteArgs) {
 pub struct NoteNewArgs {
     /// The name of the note
     pub name: Option<String>,
+
+    #[clap(short, long, default_value = "false")]
+    pub copy_to_clipboard: bool,
 }
 
 fn new(args: &NoteNewArgs) {
     // destructure the args
-    let NoteNewArgs { name } = args;
+    let NoteNewArgs {
+        name,
+        copy_to_clipboard,
+    } = args;
 
     if name.is_none() {
         println!("You didn't provide a name for the note");
@@ -89,6 +95,19 @@ fn new(args: &NoteNewArgs) {
     }
     fs::File::create(note_dir.clone()).expect("Failed to create note");
 
+    let note_dir_str = note_dir
+        .to_str()
+        .expect("Failed to convert note dir to string");
+
+    println!("{}", "Note created at:");
+    println!();
+    println!("   {}", note_dir_str.yellow());
+    if *copy_to_clipboard {
+        alina::util::copy_to_clipboard(note_dir_str.to_string());
+        println!("   {}", "Copied to clipboard".truecolor(169, 169, 169));
+    }
+    println!();
+
     // Ask if user wants to edit the note
     let edit = dialoguer::Confirm::new()
         .with_prompt("Do you want to edit the note?")
@@ -104,8 +123,6 @@ fn new(args: &NoteNewArgs) {
         println!("{}", "Opening note in editor ...".green());
         alina::util::open_file_in_editor(&note_dir);
     }
-    
-
 }
 
 fn list() {
@@ -138,8 +155,44 @@ fn list() {
                 .to_string()
                 .black()
                 .on_bright_yellow(),
-                note_file_name
+            note_file_name
         );
+    }
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct NoteEditArgs {
+    /// The name of the note
+    pub name: Option<String>,
+}
+
+pub fn edit(args: &NoteEditArgs) {
+    let NoteEditArgs { name } = args;
+
+    if let None = name {
+        println!("Name not provided");
+        let cnf = alina::config::load_config();
+        let mut note_dir = *cnf.code_dir;
+        note_dir.push("notes");
+        let files: Vec<String> = fs::read_dir(note_dir)
+            .expect("Failed to read notes directory")
+            .map(|entry| {
+                let entry = entry.expect("Failed to read note file");
+                let note_file_name = entry.file_name();
+                let note_file_name = note_file_name
+                    .to_str()
+                    .expect("Failed to convert note file name to string");
+                note_file_name.to_string()
+            })
+            .collect();
+        dialoguer::Select::new()
+            .with_prompt("Please select a note to edit")
+            .items(&files)
+            .interact()
+            .expect("Failed to get input");
+
+        // let file_name_chosen = files[result].clone();
+        return;
     }
 }
 

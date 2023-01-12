@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 #[derive(Debug, Clone, ValueEnum, Parser)]
 pub enum Languages {
     Rust,
-    Javascript
+    Javascript,
 }
 
 impl Display for Languages {
